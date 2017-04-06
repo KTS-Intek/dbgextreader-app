@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/font">
+        <file>font/Noto/LICENSE.txt</file>
+        <file>font/Noto/NotoSans-Regular.ttf</file>
+        <file>font/copyright.txt</file>
+        <file>font/LICENCE.txt</file>
+        <file>font/README.txt</file>
+        <file>font/Ubuntu-R.ttf</file>
+        <file>font/UbuntuMono-R.ttf</file>
+    </qresource>
+</RCC>
