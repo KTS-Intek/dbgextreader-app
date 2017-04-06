@@ -33,4 +33,5 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui
 
 RESOURCES += \
-    font.qrc
+    font.qrc \
+    img.qrc

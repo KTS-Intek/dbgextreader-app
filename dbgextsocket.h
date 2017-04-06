@@ -63,13 +63,13 @@ private slots:
 
     void mReadyRead();
 
-    void decodeReadData(const QVariant &readVar, const qint32 &sourceType);
+    void decodeReadData(const QByteArray &readArr, const qint32 &sourceType);
 
 
 
 
 private:
-    QVariant uncompressRead(QByteArray readArr, quint32 &command);
+    QByteArray uncompressRead(QByteArray readArr, quint32 &command);
     QHash<quint32,QString> hashSourceCode2sourceName;
 
     QStringList dbgLog;

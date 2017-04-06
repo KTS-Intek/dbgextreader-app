@@ -211,10 +211,10 @@ void DbgExtSocket::mReadyRead()
         if(blockSize < 1 || blockSize > len)
             break;
         quint32 serverCommand;
-        QVariant readVar;
+        QByteArray readVar;
         inStrm >> serverCommand >> readVar;
         if(serverCommand == 0)
-            decodeReadData(uncompressRead(readVar.toByteArray(), serverCommand), serverCommand);
+            decodeReadData(uncompressRead(readVar, serverCommand), serverCommand);
         else
             decodeReadData(readVar, serverCommand);
         quint32 remLen = blockSize + sizeof(quint32);
@@ -227,12 +227,20 @@ void DbgExtSocket::mReadyRead()
 
 //--------------------------------------------------------------
 
-void DbgExtSocket::decodeReadData(const QVariant &readVar, const qint32 &sourceType)
+void DbgExtSocket::decodeReadData(const QByteArray &readArr, const qint32 &sourceType)
 {
     if(sourceType < 100){
         if(sourceType == 1){
             hashSourceCode2sourceName.clear();
-            QVariantHash h = readVar.toHash();
+
+            QStringList l = QString(readArr).split("\n");
+            QVariantHash h;
+
+            for(int i = 0, iMax = l.size(); i < iMax; i++){
+                QStringList l2 = l.at(i).split("=");
+                h.insert(l2.first(), l2.last());
+            }
+
             QList<QString> lk = h.keys();
             QStringList listNames;
             /*
@@ -285,7 +293,7 @@ void DbgExtSocket::decodeReadData(const QVariant &readVar, const qint32 &sourceT
             source = hashSourceCode2sourceName.value(0);
 
 
-        QStringList l = readVar.toString().split("\n");
+        QStringList l = QString(readArr).split("\n");
         QStringList outL;
         if(l.isEmpty()){
            outL = l;
@@ -306,10 +314,10 @@ void DbgExtSocket::decodeReadData(const QVariant &readVar, const qint32 &sourceT
 
 //--------------------------------------------------------------
 
-QVariant DbgExtSocket::uncompressRead(QByteArray readArr, quint32 &command)
+QByteArray DbgExtSocket::uncompressRead(QByteArray readArr, quint32 &command)
 {
     readArr = qUncompress(readArr);
-    QVariant readVar;
+    QByteArray readVar;
     QDataStream outUncompr(readArr);
     outUncompr.setVersion(QDataStream::Qt_5_6); //Qt_4_0);
     outUncompr >> command >> readVar;
