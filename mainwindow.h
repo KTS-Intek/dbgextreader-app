@@ -70,7 +70,7 @@ private slots:
 
     void onTmrReload();
 
-    void on_pushButton_clicked(bool checked);
+    void on_pushButton_clicked();
 
     void on_toolButton_17_clicked();
 

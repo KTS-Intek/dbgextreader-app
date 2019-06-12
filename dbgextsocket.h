@@ -44,6 +44,11 @@ signals:
 
     void showMess(QString s);
 
+
+    void startReconnectTmr();
+
+    void stopReconnectTmr();
+
 public slots:
     void onThreadStarted();
 
@@ -80,6 +85,7 @@ private:
         QString host;
         quint16 port;
         bool stopAll;
+        QAbstractSocket::SocketState lastState;
     } lastConnSett;
 
 };

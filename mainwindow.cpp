@@ -50,6 +50,8 @@ MainWindow::~MainWindow()
 void MainWindow::onSocketChangingState()
 {
     ui->pushButton->setEnabled(false);
+    ui->pbStop->setEnabled(true);
+    ui->lblConnState->setPixmap(QPixmap(":/katynko/svg3/user-offline.svg"));
     lastCheckedItems.clear();
 }
 
@@ -57,8 +59,12 @@ void MainWindow::onSocketChangingState()
 
 void MainWindow::onSocketStateChanged(bool isConnected)
 {
-    ui->pushButton->setEnabled(true);
-    ui->pushButton->setChecked(isConnected);
+    ui->pushButton->setEnabled(!isConnected);// true);
+    ui->pbStop->setEnabled(isConnected);
+
+    ui->lblConnState->setPixmap(QPixmap( isConnected ? ":/katynko/svg3/user-online.svg" : ":/katynko/svg3/user-no-answer.svg"));
+
+//    ui->pushButton->setChecked(isConnected);
 }
 
 //--------------------------------------------------------------
@@ -140,6 +146,8 @@ void MainWindow::initializeApp()
 
     ui->pushButton->setEnabled(true);
 
+    connect(ui->pbStop, SIGNAL(clicked(bool)), this, SIGNAL(closeConnection()) );
+
 }
 //--------------------------------------------------------------
 void MainWindow::onTmrReload()
@@ -163,15 +171,14 @@ void MainWindow::onTmrReload()
 
 //--------------------------------------------------------------
 
-void MainWindow::on_pushButton_clicked(bool checked)
+void MainWindow::on_pushButton_clicked()
 {
+    ui->pbStop->setEnabled(false);
     ui->pushButton->setEnabled(false);
-    if(checked){
-        ui->lblAboutApp->setText(tr("About:"));
-        emit connect2server(ui->lineEdit->text().simplified().trimmed(), ui->spinBox->value());
-    }else{
-        emit closeConnection();
-    }
+
+    ui->lblAboutApp->setText(tr("About:"));
+    emit connect2server(ui->lineEdit->text().simplified().trimmed(), ui->spinBox->value());
+
 }
 //--------------------------------------------------------------
 QStandardItemModel *MainWindow::getValidModel(QListView *lv, bool &ok)
@@ -212,9 +219,11 @@ void MainWindow::on_toolButton_18_clicked()
 
 void MainWindow::on_toolButton_16_clicked()
 {
+    qDebug() << "open dialog ";
     QString slahDoPapky;
     QString fileNam = QFileDialog::getSaveFileName(this, tr("Save log as..."), tr("%1/Serial log  %2.log").arg(slahDoPapky).arg(QDateTime::currentDateTime().toString("yyyy MM dd  hh mm ss")) , tr("Text file(*.log)")) ; //,tr("Readable Files(*.ods  *.csv);;ODS Files(*.ods);;CSV Files(*.csv);;All Files(*.*)"));
     if(!fileNam.isEmpty()){
+        qDebug() << "open dialog " << fileNam;
         QFileInfo fi(fileNam);
         slahDoPapky = fi.absolutePath();
 //        emit onSlahDoPapkyChngd(slahDoPapky);

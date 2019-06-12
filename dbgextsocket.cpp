@@ -35,15 +35,27 @@ void DbgExtSocket::onThreadStarted()
 {
     connect(this, SIGNAL(readyRead()), this, SLOT(mReadyRead()) );
     connect(this, SIGNAL(disconnected()), this, SLOT(onDisconn()) );
+
+    QTimer *t = new QTimer(this);
+    t->setSingleShot(true);
+    t->setInterval(11);
+    connect(this, SIGNAL(startReconnectTmr()), t, SLOT(start()) );
+    connect(this, SIGNAL(stopReconnectTmr()), t, SLOT(stop()) );
+
+    connect(t, SIGNAL(timeout()), this, SLOT(connect2lastHost()) );
+
 }
 
 //--------------------------------------------------------------
 
 void DbgExtSocket::connect2server(QString host, quint16 port)
 {
+    emit stopReconnectTmr();
     lastConnSett.host = host;
     lastConnSett.port = port;
     lastConnSett.stopAll = false;
+    lastConnSett.lastState = QAbstractSocket::ListeningState;
+
     connect2lastHost();
 }
 
@@ -51,8 +63,11 @@ void DbgExtSocket::connect2server(QString host, quint16 port)
 
 void DbgExtSocket::closeConnection()
 {
+//    emit stopReconnectTmr();
+
     lastConnSett.stopAll = true;
     close();
+    emit startReconnectTmr();
 }
 
 //--------------------------------------------------------------
@@ -98,19 +113,37 @@ void DbgExtSocket::clearLog()
 
 void DbgExtSocket::connect2lastHost()
 {
-    emit onSocketChangingState();
-    if(isOpen()){
+    if(lastConnSett.stopAll){
+        emit onSocketStateChanged(false);
+
+        return;
+    }
+
+    if(lastConnSett.lastState != state()){
+        emit onSocketChangingState();
+        lastConnSett.lastState = state();
+    }
+
+
+    if(state() != QAbstractSocket::UnconnectedState){
         disconnect(this, SIGNAL(disconnected()), this, SLOT(onDisconn()) );
         close();
     }
     lastReadArr.clear();
+
     connectToHost(lastConnSett.host, lastConnSett.port);
+
     if(waitForConnected(5000)){
         connect(this, SIGNAL(disconnected()), this, SLOT(onDisconn()) );
         emit onSocketStateChanged(true);
-    }else{
-        emit onSocketStateChanged(false);
+        return;
     }
+
+    close();
+//    emit onSocketStateChanged(false);
+
+    emit startReconnectTmr();
+
 }
 
 //--------------------------------------------------------------
@@ -120,7 +153,8 @@ void DbgExtSocket::onDisconn()
     emit onSocketStateChanged(false);
     if(lastConnSett.stopAll)
         return;
-    connect2lastHost();
+//    connect2lastHost();
+    emit startReconnectTmr();
 }
 //--------------------------------------------------------------
 void DbgExtSocket::mReadyRead()
